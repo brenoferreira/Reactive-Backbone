@@ -35,8 +35,11 @@
             });
         },
 
-        observableChange: function(){
-            return this.observableEvent('change');
+        observableChange: function(propertyName){
+            if(!propertyName)
+                return this.observableEvent('change');
+            else
+                return this.observableEvent('change:' + propertyName)
         }
     });
 

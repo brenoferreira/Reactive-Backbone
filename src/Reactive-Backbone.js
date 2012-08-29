@@ -19,22 +19,27 @@
         });
     };
 
-    var ReactiveView = Backbone.ReactiveView = function(options){
-        Backbone.View.apply(this, [options]);
+    var ReactiveModel = Backbone.ReactiveModel = function(options){
+        Backbone.Model.apply(this, [options]);
     };
 
-    _.extend(ReactiveView.prototype, Backbone.View.prototype, {
-        observableEvent: function(element, event) {
-            var el = document.querySelector(element);
-            var eventObservable =  Observable.fromDomEvent(el, event);
+    _.extend(ReactiveModel.prototype, Backbone.Model.prototype, {
+        observableEvent: function(event) {
+            var _this = this;
+            return Observable.create(function(observer){
+                _this.on(event, function(e){
+                    observer.onNext(e);
+                });
 
-            eventObservable.subscribe(function(){
-                callback.apply(this, arguments);
+                return function(){};
             });
+        },
 
-            return eventObservable;
+        observableChange: function(){
+            return this.observableEvent('change');
         }
     });
 
-    ReactiveView.extend = Backbone.View.extend
+    ReactiveModel.extend = Backbone.Model.extend
+
 })(this);

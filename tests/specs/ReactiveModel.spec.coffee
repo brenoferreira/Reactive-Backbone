@@ -4,17 +4,21 @@ describe 'ReactiveModel', ->
             name: ''
             age: 0
 
+        validate: (changedAttributes) ->
+            if(changedAttributes.age < 0)
+                return 'invalid age'
+
     describe 'observableEvent', ->
         it 'subscribing to change observable returned by observableEvent, should call observer onNext callback', ->
             person = new Person
             onChangeObservable = person.observableEvent 'change'
 
-            actual = 'john'
-            expected = ''
-            onChangeObservable.subscribe (e) ->
-                expected = e.get 'name'
+            expected = 'john'
+            actual = ''
+            onChangeObservable.subscribe (model, changes) ->
+                actual = model.get 'name'
 
-            person.set 'name', actual
+            person.set 'name', expected
 
             expect(expected).toBe actual
 
@@ -22,12 +26,12 @@ describe 'ReactiveModel', ->
             person = new Person
             onChangeObservable = person.observableEvent 'change:age'
 
-            actual = 23
-            expected = ''
-            onChangeObservable.subscribe (e) ->
-                expected = e.get 'age'
+            expected = 23
+            actual = ''
+            onChangeObservable.subscribe (model, changes) ->
+                actual = model.get 'age'
 
-            person.set 'age', actual
+            person.set 'age', expected
 
             expect(expected).toBe actual
 
@@ -36,12 +40,12 @@ describe 'ReactiveModel', ->
             person = new Person
             onChangeObservable = person.observableChange()
 
-            actual = 'john'
-            expected = ''
-            onChangeObservable.subscribe (e) ->
-                expected = e.get 'name'
+            expected = 'john'
+            actual = ''
+            onChangeObservable.subscribe (model, changes) ->
+                actual = model.get 'name'
 
-            person.set 'name', actual
+            person.set 'name', expected
 
             expect(expected).toBe actual
 
@@ -49,11 +53,39 @@ describe 'ReactiveModel', ->
             person = new Person
             onChangeObservable = person.observableChange('age')
 
-            actual = 23
-            expected = 0
-            onChangeObservable.subscribe (e) ->
-                expected = e.get 'age'
+            expected = 23
+            actual = 0
+            onChangeObservable.subscribe (model, changes) ->
+                actual = model.get 'age'
 
-            person.set 'age', actual
+            person.set 'age', expected
 
             expect(expected).toBe actual
+
+    describe 'observableError', ->
+        it 'creating observable for error event, should fire onNext when model validation fails', ->
+            person = new Person
+
+            onErrorObservable = person.observableError()
+
+            errorFired = false
+            onErrorObservable.subscribe (errorData) ->
+                errorFired = true
+
+            person.set 'age', -1
+
+            expect(errorFired).toBeTruthy()
+
+        it 'creating observable for error event, should fire onNext when model validation fails', ->
+            person = new Person
+
+            onErrorObservable = person.observableError()
+
+            expectedError = 'invalid age'
+            actualError = ''
+            onErrorObservable.subscribe (errorData) ->
+                actualError = errorData.error
+
+            person.set 'age', -1    
+
+            expect(actualError).toEqual expectedError

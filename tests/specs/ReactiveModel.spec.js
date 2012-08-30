@@ -5,6 +5,9 @@ describe('ReactiveModel', function() {
     defaults: {
       name: '',
       age: 0
+    },
+    validate: function(changedAttributes) {
+      if (changedAttributes.age < 0) return 'invalid age';
     }
   });
   describe('observableEvent', function() {
@@ -12,51 +15,76 @@ describe('ReactiveModel', function() {
       var actual, expected, onChangeObservable, person;
       person = new Person;
       onChangeObservable = person.observableEvent('change');
-      actual = 'john';
-      expected = '';
-      onChangeObservable.subscribe(function(e) {
-        return expected = e.get('name');
+      expected = 'john';
+      actual = '';
+      onChangeObservable.subscribe(function(model, changes) {
+        return actual = model.get('name');
       });
-      person.set('name', actual);
+      person.set('name', expected);
       return expect(expected).toBe(actual);
     });
     return it('subscribing to change:propertyName observable returned by observableEvent, should call observer onNext callback', function() {
       var actual, expected, onChangeObservable, person;
       person = new Person;
       onChangeObservable = person.observableEvent('change:age');
-      actual = 23;
-      expected = '';
-      onChangeObservable.subscribe(function(e) {
-        return expected = e.get('age');
+      expected = 23;
+      actual = '';
+      onChangeObservable.subscribe(function(model, changes) {
+        return actual = model.get('age');
       });
-      person.set('age', actual);
+      person.set('age', expected);
       return expect(expected).toBe(actual);
     });
   });
-  return describe('observableChange', function() {
+  describe('observableChange', function() {
     it('creating observable for change event, should fire onNext on observer when name property changes', function() {
       var actual, expected, onChangeObservable, person;
       person = new Person;
       onChangeObservable = person.observableChange();
-      actual = 'john';
-      expected = '';
-      onChangeObservable.subscribe(function(e) {
-        return expected = e.get('name');
+      expected = 'john';
+      actual = '';
+      onChangeObservable.subscribe(function(model, changes) {
+        return actual = model.get('name');
       });
-      person.set('name', actual);
+      person.set('name', expected);
       return expect(expected).toBe(actual);
     });
     return it('creating observable for custom property change event, should fire onNext on observer when name property changes', function() {
       var actual, expected, onChangeObservable, person;
       person = new Person;
       onChangeObservable = person.observableChange('age');
-      actual = 23;
-      expected = 0;
-      onChangeObservable.subscribe(function(e) {
-        return expected = e.get('age');
+      expected = 23;
+      actual = 0;
+      onChangeObservable.subscribe(function(model, changes) {
+        return actual = model.get('age');
       });
-      person.set('age', actual);
+      person.set('age', expected);
       return expect(expected).toBe(actual);
+    });
+  });
+  return describe('observableError', function() {
+    it('creating observable for error event, should fire onNext when model validation fails', function() {
+      var errorFired, onErrorObservable, person;
+      person = new Person;
+      onErrorObservable = person.observableError();
+      errorFired = false;
+      onErrorObservable.subscribe(function(errorData) {
+        return errorFired = true;
+      });
+      person.set('age', -1);
+      return expect(errorFired).toBeTruthy();
+    });
+    return it('creating observable for error event, should fire onNext when model validation fails', function() {
+      var actualError, expectedError, onErrorObservable, person;
+      person = new Person;
+      onErrorObservable = person.observableError();
+      expectedError = 'invalid age';
+      actualError = '';
+      onErrorObservable.subscribe(function(errorData) {
+        return actualError = errorData.error;
+      });
+      person.set('age', -1);
+      return expect(actualError).toEqual(expectedError);
     });
   });
 });

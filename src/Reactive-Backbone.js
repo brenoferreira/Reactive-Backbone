@@ -40,6 +40,17 @@
                 return this.observableEvent('change');
             else
                 return this.observableEvent('change:' + propertyName)
+        },
+
+        observableError: function(){
+            var _this = this;
+            return Observable.create(function(observer){
+                _this.on('error', function(model, error){
+                    observer.onNext({ model: model, error: error });
+                });
+
+                return function(){};
+            });
         }
     });
 

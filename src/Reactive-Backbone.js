@@ -6,8 +6,8 @@
             var element = document.querySelector(selector);
 
             if(element){
-                element.addEventListener(event, function(e){
-                    observer.onNext(e);
+                element.addEventListener(event, function(){
+                    observer.onNext.apply(observer, arguments);
                 });
 
                 return function(){};
@@ -27,8 +27,12 @@
         observableEvent: function(event) {
             var _this = this;
             return Observable.create(function(observer){
-                _this.on(event, function(e){
-                    observer.onNext(e);
+                _this.on(event, function(){
+                    observer.onNext.apply(observer, arguments);
+                });
+
+                _this.on('error', function(model, error){
+                    observer.onError({model: model, error: error});
                 });
 
                 return function(){};
@@ -46,7 +50,7 @@
             var _this = this;
             return Observable.create(function(observer){
                 _this.on('error', function(model, error){
-                    observer.onNext({ model: model, error: error });
+                    observer.onNext({model: model, error: error});
                 });
 
                 return function(){};

@@ -15,7 +15,7 @@ describe 'ReactiveModel', ->
 
             expected = 'john'
             actual = ''
-            onChangeObservable.subscribe (model, changes) ->
+            onChangeObservable.subscribe (model) ->
                 actual = model.get 'name'
 
             person.set 'name', expected
@@ -28,7 +28,7 @@ describe 'ReactiveModel', ->
 
             expected = 23
             actual = ''
-            onChangeObservable.subscribe (model, changes) ->
+            onChangeObservable.subscribe (model) ->
                 actual = model.get 'age'
 
             person.set 'age', expected
@@ -42,7 +42,7 @@ describe 'ReactiveModel', ->
 
             expected = 'john'
             actual = ''
-            onChangeObservable.subscribe (model, changes) ->
+            onChangeObservable.subscribe (model) ->
                 actual = model.get 'name'
 
             person.set 'name', expected
@@ -55,37 +55,80 @@ describe 'ReactiveModel', ->
 
             expected = 23
             actual = 0
-            onChangeObservable.subscribe (model, changes) ->
+            onChangeObservable.subscribe (model) ->
                 actual = model.get 'age'
 
             person.set 'age', expected
 
             expect(expected).toBe actual
 
-    describe 'observableError', ->
-        it 'creating observable for error event, should fire onNext when model validation fails', ->
+    describe 'error handling', ->
+        it 'subscribing to change:propertyName observable returned by observableEvent, should call observer onError if model is set to invalid state', ->
             person = new Person
-
-            onErrorObservable = person.observableError()
+            onChangeObservable = person.observableEvent 'change:age'
 
             errorFired = false
-            onErrorObservable.subscribe (errorData) ->
-                errorFired = true
+            onChangeObservable.subscribe (model) -> 
+                ,
+                (errorData) ->
+                    errorFired = true
 
             person.set 'age', -1
 
             expect(errorFired).toBeTruthy()
 
-        it 'creating observable for error event, should fire onNext when model validation fails', ->
+        it 'subscribing to change observable returned by observableEvent, should call observer onError if model is set to invalid state', ->
             person = new Person
+            onChangeObservable = person.observableEvent 'change'
 
-            onErrorObservable = person.observableError()
+            errorFired = false
+            onChangeObservable.subscribe (model) -> 
+                ,
+                (errorData) ->
+                    errorFired = true
 
-            expectedError = 'invalid age'
-            actualError = ''
-            onErrorObservable.subscribe (errorData) ->
-                actualError = errorData.error
+            person.set 'age', -1
 
-            person.set 'age', -1    
+            expect(errorFired).toBeTruthy()
 
-            expect(actualError).toEqual expectedError
+        it 'subscribing to change observable returned by observableEvent, should call observer onError if model is set to invalid state', ->
+            person = new Person
+            onChangeObservable = person.observableChange()
+
+            errorFired = false
+            onChangeObservable.subscribe (model) -> 
+                ,
+                (errorData) ->
+                    errorFired = true
+
+            person.set 'age', -1
+
+            expect(errorFired).toBeTruthy()
+
+        describe 'observableError', ->
+            it 'creating observable for error event, should fire onNext when model validation fails', ->
+                person = new Person
+
+                onErrorObservable = person.observableError()
+
+                errorFired = false
+                onErrorObservable.subscribe (data) ->
+                    errorFired = true
+
+                person.set 'age', -1
+
+                expect(errorFired).toBeTruthy()
+
+            it 'creating observable for error event, should fire onNext when model validation fails', ->
+                person = new Person
+
+                onErrorObservable = person.observableError()
+
+                expectedError = 'invalid age'
+                actualError = ''
+                onErrorObservable.subscribe (data) ->
+                    actualError = data.error
+
+                person.set 'age', -1    
+
+                expect(actualError).toEqual expectedError

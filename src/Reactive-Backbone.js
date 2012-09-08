@@ -60,4 +60,32 @@
 
     ReactiveModel.extend = Backbone.Model.extend
 
+
+    var ReactiveCollection = Backbone.ReactiveCollection = function(options){
+        Backbone.Collection.apply(this, [options]);
+    };
+
+    _.extend(ReactiveCollection.prototype, Backbone.Collection.prototype, {
+        observableEvent: function(event) {
+            var _this = this;
+            return Observable.create(function(observer){
+                _this.on(event, function(){
+                    observer.onNext.apply(observer, arguments);
+                });
+
+                _this.on('error', function(model, error){
+                    observer.onError({model: model, error: error});
+                });
+
+                return function(){};
+            });
+        },
+
+        observableAdd: function(){
+            return this.observableEvent('add');
+        }
+    });
+
+    ReactiveCollection.extend = Backbone.Collection.extend
+
 })(this);
